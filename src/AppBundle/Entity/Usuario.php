@@ -1,15 +1,12 @@
 <?php
-
 namespace AppBundle\Entity;
-
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Security\Core\User\UserInterface;
-
 /**
  * Usuario
  *
- * @ORM\Table(name="usuario", uniqueConstraints={@ORM\UniqueConstraint(name="email_idx", columns={"email"})})
+ * @ORM\Table(name="usuario")
  * @ORM\Entity(repositoryClass="AppBundle\Repository\UsuarioRepository")
  */
 class Usuario implements UserInterface, \Serializable
@@ -22,59 +19,69 @@ class Usuario implements UserInterface, \Serializable
      * @ORM\GeneratedValue(strategy="AUTO")
      */
     private $id;
-
     /**
      * @var string
      *
      * @ORM\Column(name="nombre", type="string", length=255)
      */
     private $nombre;
-
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="email", type="string", length=255)
-     */
-    private $email;
-
     /**
      * @var string
      *
      * @ORM\Column(name="apellido", type="string", length=255)
      */
     private $apellido;
-
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="email", type="string", length=255, unique=true)
+     */
+    private $email;
     /**
      * @var string
      *
      * @ORM\Column(name="password", type="string", length=255)
      */
     private $password;
-
+    /**
+     * @ORM\OneToMany(targetEntity="Solicitud", mappedBy="usuarioSolicitante")
+     */
+    private $UsuarioSolicitanteSolicitudes;
+    /**
+     * @ORM\OneToMany(targetEntity="Solicitud", mappedBy="usuarioAsignado")
+     */
+    private $UsuarioAsignadoSolicitudes;
+    /**
+     * @ORM\OneToMany(targetEntity="UsuarioCamposAfines", mappedBy="usuario")
+     */
+    private $UsuariosCamposAfines;
+    public function __construct()
+    {
+        $this->UsuarioAsignadoSolicitudes = new ArrayCollection();
+        $this->UsuarioSolicitanteSolicitudes = new ArrayCollection();
+        $this->UsuariosCamposAfines = new ArrayCollection();
+    }
     /**
      * @var bool
      *
      * @ORM\Column(name="habilitado", type="boolean")
      */
     private $habilitado;
-
+    private $plainPassword;
     /**
-     * @var
-     * @ORM\OneToMany(targetEntity="Solicitud", mappedBy="UsuarioSolicitante")
-     *
+     * @return mixed
      */
-    private $misSolicitudes;
-
-    /**
-     * Usuario constructor
-     * @return int
-     */
-    public function __construct()
+    public function getPlainPassword()
     {
-        $this->misSolicitudes = new ArrayCollection();
+        return $this->plainPassword;
     }
-
-
+    /**
+     * @param mixed $plainPassword
+     */
+    public function setPlainPassword($password)
+    {
+        $this->plainPassword = $password;
+    }
     /**
      * Get id
      *
@@ -84,7 +91,6 @@ class Usuario implements UserInterface, \Serializable
     {
         return $this->id;
     }
-
     /**
      * Set nombre
      *
@@ -95,10 +101,8 @@ class Usuario implements UserInterface, \Serializable
     public function setNombre($nombre)
     {
         $this->nombre = $nombre;
-
         return $this;
     }
-
     /**
      * Get nombre
      *
@@ -108,31 +112,6 @@ class Usuario implements UserInterface, \Serializable
     {
         return $this->nombre;
     }
-
-    /**
-     * Set email
-     *
-     * @param string $email
-     *
-     * @return Usuario
-     */
-    public function setEmail($email)
-    {
-        $this->email = $email;
-
-        return $this;
-    }
-
-    /**
-     * Get email
-     *
-     * @return string
-     */
-    public function getEmail()
-    {
-        return $this->email;
-    }
-
     /**
      * Set apellido
      *
@@ -143,10 +122,8 @@ class Usuario implements UserInterface, \Serializable
     public function setApellido($apellido)
     {
         $this->apellido = $apellido;
-
         return $this;
     }
-
     /**
      * Get apellido
      *
@@ -156,7 +133,27 @@ class Usuario implements UserInterface, \Serializable
     {
         return $this->apellido;
     }
-
+    /**
+     * Set email
+     *
+     * @param string $email
+     *
+     * @return Usuario
+     */
+    public function setEmail($email)
+    {
+        $this->email = $email;
+        return $this;
+    }
+    /**
+     * Get email
+     *
+     * @return string
+     */
+    public function getEmail()
+    {
+        return $this->email;
+    }
     /**
      * Set password
      *
@@ -167,10 +164,8 @@ class Usuario implements UserInterface, \Serializable
     public function setPassword($password)
     {
         $this->password = $password;
-
         return $this;
     }
-
     /**
      * Get password
      *
@@ -180,7 +175,6 @@ class Usuario implements UserInterface, \Serializable
     {
         return $this->password;
     }
-
     /**
      * Set habilitado
      *
@@ -191,10 +185,8 @@ class Usuario implements UserInterface, \Serializable
     public function setHabilitado($habilitado)
     {
         $this->habilitado = $habilitado;
-
         return $this;
     }
-
     /**
      * Get habilitado
      *
@@ -204,42 +196,6 @@ class Usuario implements UserInterface, \Serializable
     {
         return $this->habilitado;
     }
-
-    /**
-     * String representation of object
-     * @link https://php.net/manual/en/serializable.serialize.php
-     * @return string the string representation of the object or null
-     * @since 5.1.0
-     */
-    public function serialize()
-    {
-        // TODO: Implement serialize() method.
-        return serialize([
-           $this->id,
-            $this->nombre,
-            $this->email
-
-        ]);
-    }
-
-    /**
-     * Constructs the object
-     * @link https://php.net/manual/en/serializable.unserialize.php
-     * @param string $serialized <p>
-     * The string representation of the object.
-     * </p>
-     * @return void
-     * @since 5.1.0
-     */
-    public function unserialize($serialized)
-    {
-        // TODO: Implement unserialize() method.
-        list($this->id,
-            $this->nombre,
-            $this->email
-            )=$this->unserialize($serialized);
-    }
-
     /**
      * Returns the roles granted to the user.
      *
@@ -256,10 +212,8 @@ class Usuario implements UserInterface, \Serializable
      */
     public function getRoles()
     {
-        // TODO: Implement getRoles() method.
-        return["USER_ROLE"];
+        return array ("ROLE_ADMIN");
     }
-
     /**
      * Returns the salt that was originally used to encode the password.
      *
@@ -272,7 +226,6 @@ class Usuario implements UserInterface, \Serializable
         // TODO: Implement getSalt() method.
         return null;
     }
-
     /**
      * Returns the username used to authenticate the user.
      *
@@ -280,10 +233,8 @@ class Usuario implements UserInterface, \Serializable
      */
     public function getUsername()
     {
-        // TODO: Implement getUsername() method.
         return $this->email;
     }
-
     /**
      * Removes sensitive data from the user.
      *
@@ -294,5 +245,35 @@ class Usuario implements UserInterface, \Serializable
     {
         // TODO: Implement eraseCredentials() method.
     }
+    /**
+     * String representation of object
+     * @link https://php.net/manual/en/serializable.serialize.php
+     * @return string the string representation of the object or null
+     * @since 5.1.0
+     */
+    public function serialize()
+    {
+        return serialize([
+            $this->id,
+            $this->nombre,
+            $this->email
+        ]);
+    }
+    /**
+     * Constructs the object
+     * @link https://php.net/manual/en/serializable.unserialize.php
+     * @param string $serialized <p>
+     * The string representation of the object.
+     * </p>
+     * @return void
+     * @since 5.1.0
+     */
+    public function unserialize($serialized)
+    {
+        list(
+            $this->id,
+            $this->nombre,
+            $this->email
+            ) = unserialize($serialized, ['allowed_classes' => false]);
+    }
 }
-
